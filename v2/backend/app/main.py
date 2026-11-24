@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+from secrets import token_hex
 from threading import RLock
 from typing import List, Optional
-from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -153,7 +153,9 @@ def get_campaign_view(cid: int, db: OrmSession = Depends(get_db)):
 def create_campaign(data: CampaignCreate, db: OrmSession = Depends(get_db)):
     """Создаёт кампанию в Keitaro: поток GEO → Google, поток офферов → оффер."""
     find_offer(data.offer_id)  # проверяем, что оффер существует
-    alias = uuid4().hex
+    # alias — часть URL кампании в трекере: допустимы a-z, 0-9, '-' и '_',
+    # принято ~6–10 символов. Генерируем короткий hex, uuid слишком длинный.
+    alias = token_hex(5)
     try:
         created = api_call("POST", "campaigns", json={
             "name": data.name,
