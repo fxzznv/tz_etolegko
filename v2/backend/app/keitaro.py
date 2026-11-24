@@ -127,13 +127,14 @@ class MockKeitaro:
             return handler(seg, query, json or {})
 
     def _delete(self, seg, query, body):
+        # В Keitaro DELETE — это архивация (soft delete), а не физическое
+        # удаление: кампания уходит из основного списка в архив.
         if len(seg) == 2 and seg[0] == "campaigns" and seg[1].isdigit():
             cid = int(seg[1])
-            if cid not in self.campaigns:
+            camp = self.campaigns.get(cid)
+            if camp is None or camp["state"] == "removed":
                 raise KeitaroError(404, "Кампания не найдена")
-            del self.campaigns[cid]
-            for sid in [s for s, st in self.streams.items() if st["campaign_id"] == cid]:
-                del self.streams[sid]
+            camp["state"] = "removed"
             return {"id": cid, "state": "removed"}
         if len(seg) == 2 and seg[0] == "streams" and seg[1].isdigit():
             sid = int(seg[1])
@@ -159,7 +160,10 @@ class MockKeitaro:
             return dict(offer)
         if seg == ["campaigns"]:
             return [{"id": c["id"], "name": c["name"], "state": c["state"]}
-                    for c in self.campaigns.values()]
+                    for c in self.campaigns.values() if c["state"] != "removed"]
+        if seg == ["campaigns", "deleted"]:
+            return [{"id": c["id"], "name": c["name"], "state": c["state"]}
+                    for c in self.campaigns.values() if c["state"] == "removed"]
         if len(seg) == 2 and seg[0] == "campaigns" and seg[1].isdigit():
             camp = self.campaigns.get(int(seg[1]))
             if camp is None:
@@ -187,6 +191,12 @@ class MockKeitaro:
                 raise KeitaroError(404, "Кампания не найдена")
             self.campaigns[cid]["state"] = "active"
             return {"id": cid, "state": "active"}
+        if len(seg) == 3 and seg[0] == "campaigns" and seg[1].isdigit() and seg[2] == "restore":
+            cid = int(seg[1])
+            if cid not in self.campaigns:
+                raise KeitaroError(404, "Кампания не найдена")
+            self.campaigns[cid]["state"] = "disabled"
+            return {"id": cid, "state": "disabled"}
         if seg == ["streams"]:
             return self._create_stream(body)
         raise KeitaroError(404, f"Mock: POST {seg} не реализован")
