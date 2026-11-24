@@ -74,7 +74,9 @@ def get_stream(db: OrmSession, sid: int) -> Stream:
 def campaign_view(db: OrmSession, cid: int) -> dict:
     camp = get_campaign(db, cid)
     rows = db.scalars(
-        select(Stream).where(Stream.campaign_id == cid).order_by(Stream.id)
+        select(Stream)
+        .where(Stream.campaign_id == cid)
+        .order_by(Stream.position.is_(None), Stream.position, Stream.id)
     ).all()
     return {
         "id": camp.id,
@@ -83,6 +85,9 @@ def campaign_view(db: OrmSession, cid: int) -> dict:
             {
                 "id": s.id,
                 "name": s.name,
+                "schema": s.schema,
+                "stream_type": s.stream_type,
+                "position": s.position,
                 "offers": s.draft,
                 "published": s.published,
                 "dirty": s.draft != s.published,
@@ -257,6 +262,9 @@ def fetch_campaign(cid: int, db: OrmSession = Depends(get_db)):
                 local = Stream(id=sid, campaign_id=cid, name=rs.get("name", f"Stream {sid}"))
                 db.add(local)
             local.name = rs.get("name", local.name)
+            local.schema = rs.get("schema")
+            local.stream_type = rs.get("type")
+            local.position = rs.get("position")
             local.published = rows
             local.draft = deepcopy(rows)
         for s in db.scalars(select(Stream).where(Stream.campaign_id == cid)):

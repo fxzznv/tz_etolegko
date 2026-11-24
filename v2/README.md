@@ -77,9 +77,11 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 ### Редактор
 
 - `POST /api/campaigns/{id}/fetch` — читает кампанию и её потоки из
-  Keitaro, сохраняет в SQLite. Офферы, пропавшие из трекера, попадают в
-  локальный архив (`state="removed"`). Отказывается работать при наличии
-  неопубликованного черновика.
+  Keitaro, сохраняет в SQLite вместе с `schema`, `type` и `position`
+  каждого потока (по ним фронт отличает поток офферов `landings` от
+  редиректов и сортирует потоки в порядке Keitaro). Офферы, пропавшие
+  из трекера, попадают в локальный архив (`state="removed"`).
+  Отказывается работать при наличии неопубликованного черновика.
 - `POST /api/streams/{id}/offers/{add|remove|restore|pin|unpin}` — правит
   черновик (`draft`) и пересчитывает доли.
 - `POST /api/streams/{id}/push` — сравнивает черновик с текущим состоянием
@@ -151,7 +153,7 @@ v2/
     ├── app/
     │   ├── main.py         # FastAPI: API + раздача фронта
     │   ├── keitaro.py      # клиент Admin API + MockKeitaro
-    │   ├── models.py       # Campaign, Stream (SQLAlchemy)
+    │   ├── models.py       # Campaign, Stream (+schema/type/position потока)
     │   ├── shares.py       # доли офферов: pin/redistribute/payload
     │   ├── db.py           # engine/session
     │   └── static/         # index.html, app.js, style.css

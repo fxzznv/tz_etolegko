@@ -133,12 +133,14 @@ function renderStream(s) {
     card.appendChild(warn);
   }
 
-  // только потоки с офферами редактируем как набор офферов;
-  // GEO-поток тоже показываем, но без таблицы связей
+  // поток офферов определяется по schema='landings' из Keitaro;
+  // запасные признаки — наличие связей или имя (для старых записей без schema)
   const hasOffers = Array.isArray(s.offers) && s.offers.length > 0;
-  const isOfferStream = hasOffers || s.name.toLowerCase().includes('оффер') || s.name.toLowerCase().includes('offer');
+  const name = (s.name || '').toLowerCase();
+  const isOfferStream = s.schema === 'landings' || hasOffers
+    || name.includes('оффер') || name.includes('offer');
 
-  if (!isOfferStream && !hasOffers) {
+  if (!isOfferStream) {
     const p = document.createElement('p');
     p.className = 'hint';
     p.textContent = 'Поток без привязанных офферов (например, GEO-редирект). Редактируется в Keitaro.';

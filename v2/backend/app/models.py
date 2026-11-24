@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,6 +23,11 @@ class Stream(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"))
     name: Mapped[str] = mapped_column(String(255))
+    # метаданные потока из Keitaro: schema='landings' — поток офферов,
+    # 'redirect' — редирект (GEO и т.п.); position — порядок в кампании
+    schema: Mapped[Optional[str]] = mapped_column(String(50))
+    stream_type: Mapped[Optional[str]] = mapped_column(String(50))
+    position: Mapped[Optional[int]] = mapped_column()
     # published — последнее состояние, известное в Keitaro;
     # draft — локальный черновик, уходит в трекер по кнопке Push.
     # Каждый элемент: {"id": offer_id, "name": str, "share": int,
