@@ -172,7 +172,7 @@ def create_campaign(data: CampaignCreate, db: OrmSession = Depends(get_db)):
         ) from exc
 
     cid = created["id"]
-    progress = "кампания создана. Проверьте в Keitaro поток страны."
+    progress = "создание потока страны"
     try:
         api_call("POST", "streams", json={
             "campaign_id": cid,
@@ -189,7 +189,7 @@ def create_campaign(data: CampaignCreate, db: OrmSession = Depends(get_db)):
                 "payload": [data.country],
             }],
         })
-        progress = "кампания создана, поток страны готов. Проверьте поток офферов."
+        progress = "создание потока офферов"
         api_call("POST", "streams", json={
             "campaign_id": cid,
             "name": "Офферы",
@@ -200,12 +200,29 @@ def create_campaign(data: CampaignCreate, db: OrmSession = Depends(get_db)):
             "schema": "landings",
             "offers": [{"offer_id": data.offer_id, "share": 100, "state": "active"}],
         })
-        progress = "кампания создана с обоими потоками. Проверьте, включена ли она в Keitaro."
+        progress = "включение кампании"
         api_call("POST", f"campaigns/{cid}/enable")
         progress = "кампания включена."
     except HTTPException as exc:
+        # Откатываем недособранную кампанию, чтобы в трекере не осталось
+        # полусозданных сущностей. Если удаление не удалось — сообщаем
+        # alias для ручной проверки.
+        deleted = True
+        try:
+            api_call("DELETE", f"campaigns/{cid}")
+        except HTTPException:
+            deleted = False
+        if deleted:
+            raise HTTPException(
+                exc.status_code,
+                f"Ошибка на шаге «{progress}» — недособранная кампания #{cid} "
+                f"удалена из Keitaro. Исходная ошибка: {exc.detail}",
+            ) from exc
         raise HTTPException(
-            exc.status_code, f"Кампания #{cid}: {progress} {exc.detail}"
+            exc.status_code,
+            f"Ошибка на шаге «{progress}». Не удалось удалить кампанию #{cid} "
+            f"(alias {alias}) — проверьте её в Keitaro вручную. "
+            f"Исходная ошибка: {exc.detail}",
         ) from exc
 
     return fetch_campaign(cid, db)

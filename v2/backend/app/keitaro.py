@@ -126,6 +126,23 @@ class MockKeitaro:
                 raise KeitaroError(405, f"Mock: метод {method} не поддержан")
             return handler(seg, query, json or {})
 
+    def _delete(self, seg, query, body):
+        if len(seg) == 2 and seg[0] == "campaigns" and seg[1].isdigit():
+            cid = int(seg[1])
+            if cid not in self.campaigns:
+                raise KeitaroError(404, "Кампания не найдена")
+            del self.campaigns[cid]
+            for sid in [s for s, st in self.streams.items() if st["campaign_id"] == cid]:
+                del self.streams[sid]
+            return {"id": cid, "state": "removed"}
+        if len(seg) == 2 and seg[0] == "streams" and seg[1].isdigit():
+            sid = int(seg[1])
+            if sid not in self.streams:
+                raise KeitaroError(404, "Поток не найден")
+            del self.streams[sid]
+            return {"id": sid, "state": "removed"}
+        raise KeitaroError(404, f"Mock: DELETE {seg} не реализован")
+
     def _get(self, seg, query, body):
         if seg == ["domains"]:
             return [dict(d) for d in self.domains]
