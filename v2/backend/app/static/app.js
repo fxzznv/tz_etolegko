@@ -2,7 +2,6 @@
 
 const $ = sel => document.querySelector(sel);
 const state = {
-  campaign: null,      // текущая кампания с потоками
   offerId: null,       // выбранный оффер в форме создания
   busy: false,
 };
@@ -86,7 +85,7 @@ function makeOfferAutocomplete(input, onPick) {
       try {
         matches = await api('offers?q=' + encodeURIComponent(q));
         list.innerHTML = matches.map(o =>
-          `<option value="${o.name} #${o.id}"></option>`).join('');
+          `<option value="${escapeHtml(o.name)} #${o.id}"></option>`).join('');
       } catch (_) { list.innerHTML = ''; matches = []; }
     }, 250);
   });
@@ -107,7 +106,6 @@ function makeOfferAutocomplete(input, onPick) {
 }
 
 function renderCampaign(c) {
-  state.campaign = c;
   $('#editor-hint').classList.add('hidden');
   const root = $('#campaign-view');
   root.innerHTML = '';
@@ -157,14 +155,16 @@ function renderStream(s) {
   </tr></thead><tbody></tbody>`;
   const tbody = table.querySelector('tbody');
 
-  const totalActive = s.offers.filter(o => o.state === 'active').reduce((a, o) => a + o.share, 0);
+  const totalActive = s.offers
+    .filter(o => o.state === 'active')
+    .reduce((a, o) => a + (o.share ?? 0), 0);
 
   for (const o of s.offers) {
     const tr = document.createElement('tr');
     if (o.state === 'removed') tr.className = 'archived';
     tr.innerHTML = `
       <td>${escapeHtml(o.name)}${o.state === 'removed' ? ' <span class="tag">[removed]</span>' : ''} <small class="oid">#${o.id}</small></td>
-      <td class="share">${o.share}%</td>
+      <td class="share">${(o.share ?? 0)}%</td>
       <td class="pin-cell"></td>
       <td class="row-actions"></td>`;
 
@@ -190,11 +190,17 @@ function renderStream(s) {
         num.className = 'pin-pct';
         const btn = document.createElement('button');
         btn.textContent = 'Применить';
-        btn.addEventListener('click', () =>
+        btn.addEventListener('click', () => {
+          const pct = num.value === '' ? NaN : Number(num.value);
+          if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+            showError('Введите долю закрепления: число от 0 до 100');
+            return;
+          }
           run(async () => {
-            const view = await api(`streams/${s.id}/offers/pin`, { offer_id: o.id, percent: Number(num.value) });
+            const view = await api(`streams/${s.id}/offers/pin`, { offer_id: o.id, percent: pct });
             renderCampaign(view);
-          }));
+          });
+        });
         pinWrap.append(num, btn);
       }
       pinCell.appendChild(pinWrap);
@@ -291,7 +297,9 @@ async function init() {
   try {
     const meta = await api('meta');
     if (meta.demo) $('#demo-badge').classList.remove('hidden');
-  } catch (_) {}
+  } catch (e) {
+    showError('Не удалось связаться с API: ' + e.message);
+  }
 
   // страны для datalist
   $('#countries').innerHTML = Object.entries(COUNTRIES)
@@ -322,7 +330,9 @@ async function init() {
       $('#local-campaigns').value = String(pick.id);
       renderCampaign(await api('campaigns/' + pick.id));
     }
-  } catch (_) {}
+  } catch (e) {
+    showError('Не удалось загрузить локальные кампании: ' + e.message);
+  }
 
   $('#local-campaigns').addEventListener('change', ev => {
     const id = ev.target.value;
@@ -357,6 +367,8 @@ async function init() {
       state.offerId = null;
       ev.target.reset();
       await refreshCampaignList();
+      $('#local-campaigns').value = String(view.id);
+      localStorage.setItem('adrobot-campaign', view.id);
       renderCampaign(view);
       showPage('editor');
       showNotice('Кампания создана и включена в Keitaro');
