@@ -148,7 +148,8 @@ function renderStream(s) {
     return card;
   }
 
-  // таблица офферов
+  // таблица офферов (если связей ещё нет — только форма добавления)
+  if (s.offers.length) {
   const wrap = document.createElement('div');
   wrap.className = 'table-wrap';
   const table = document.createElement('table');
@@ -188,7 +189,7 @@ function renderStream(s) {
       pinWrap.appendChild(cb);
       if (o.pin) {
         const num = document.createElement('input');
-        num.type = 'number'; num.min = 0; num.max = 100; num.value = o.share;
+        num.type = 'number'; num.min = 0; num.max = 100; num.value = o.share ?? 0;
         num.className = 'pin-pct';
         const btn = document.createElement('button');
         btn.textContent = 'Применить';
@@ -226,6 +227,12 @@ function renderStream(s) {
   tbody.appendChild(sumTr);
   wrap.appendChild(table);
   card.appendChild(wrap);
+  } else {
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = 'В потоке пока нет офферов — добавьте первый ниже.';
+    card.appendChild(p);
+  }
 
   // добавление оффера
   const addForm = document.createElement('form');
