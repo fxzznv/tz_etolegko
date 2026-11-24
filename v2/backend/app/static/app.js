@@ -126,7 +126,7 @@ function renderStream(s) {
   card.className = 'card stream' + (s.dirty ? ' dirty' : '');
 
   const title = document.createElement('h3');
-  title.innerHTML = `${escapeHtml(s.name)} <small>#${s.id}</small>`;
+  title.innerHTML = `${escapeHtml(s.name)} <small>Keitaro stream #${s.id}</small>`;
   card.appendChild(title);
   if (s.dirty) {
     const warn = document.createElement('p');
@@ -163,8 +163,8 @@ function renderStream(s) {
     const tr = document.createElement('tr');
     if (o.state === 'removed') tr.className = 'archived';
     tr.innerHTML = `
-      <td>${escapeHtml(o.name)} <small class="oid">#${o.id}</small></td>
-      <td class="share">${o.state === 'active' ? o.share + '%' : '—'}</td>
+      <td>${escapeHtml(o.name)}${o.state === 'removed' ? ' <span class="tag">[removed]</span>' : ''} <small class="oid">#${o.id}</small></td>
+      <td class="share">${o.share}%</td>
       <td class="pin-cell"></td>
       <td class="row-actions"></td>`;
 
@@ -202,7 +202,7 @@ function renderStream(s) {
 
     const btn = document.createElement('button');
     btn.className = 'ghost';
-    btn.textContent = o.state === 'removed' ? 'Вернуть' : 'Удалить';
+    btn.textContent = o.state === 'removed' ? 'Bring back' : 'Remove';
     btn.addEventListener('click', () =>
       run(async () => {
         const view = await api(`streams/${s.id}/offers/${o.state === 'removed' ? 'restore' : 'remove'}`, { offer_id: o.id });
@@ -246,7 +246,7 @@ function renderStream(s) {
     const foot = document.createElement('div');
     foot.className = 'actions';
     const pushBtn = document.createElement('button');
-    pushBtn.textContent = 'Push в Keitaro';
+    pushBtn.textContent = 'Push to KT';
     pushBtn.addEventListener('click', () =>
       run(async () => {
         const view = await api(`streams/${s.id}/push`, {});
@@ -255,7 +255,7 @@ function renderStream(s) {
       }));
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'ghost';
-    cancelBtn.textContent = 'Отменить';
+    cancelBtn.textContent = 'Cancel';
     cancelBtn.addEventListener('click', () =>
       run(async () => {
         const view = await api(`streams/${s.id}/cancel`, {});

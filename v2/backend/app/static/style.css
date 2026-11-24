@@ -142,6 +142,13 @@ th { font-size: 12px; color: var(--muted); font-weight: 600; }
 td.share { font-weight: 600; font-variant-numeric: tabular-nums; }
 tr.archived td { color: var(--muted); background: #fafafa; }
 .oid { display: block; font-size: 11px; }
+.tag {
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 5px;
+}
 .pin-wrap { display: inline-flex; gap: 6px; align-items: center; }
 .pin-pct { width: 62px; padding: 4px 6px; }
 .pin-wrap button { padding: 5px 9px; font-size: 12px; }
