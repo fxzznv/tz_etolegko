@@ -206,21 +206,22 @@ def create_campaign(data: CampaignCreate, db: OrmSession = Depends(get_db)):
         api_call("POST", f"campaigns/{cid}/enable")
         progress = "кампания включена."
     except HTTPException as exc:
-        # Откатываем недособранную кампанию: DELETE в Keitaro — это
-        # архивация (soft delete), кампания уходит из основного списка
-        # и при необходимости восстанавливается через /restore.
-        # Если архивация не удалась — сообщаем alias для ручной проверки.
-        archived = True
+        # Откатываем недособранную кампанию через DELETE /campaigns/{id}.
+        # По документации Keitaro это архивация (кампания восстанавливается
+        # через /restore); на учебном стенде-эмуляторе удаление
+        # безвозвратно и /restore недоступен. Если DELETE не удался —
+        # сообщаем alias для ручной проверки.
+        deleted = True
         try:
             api_call("DELETE", f"campaigns/{cid}")
         except HTTPException:
-            archived = False
-        if archived:
+            deleted = False
+        if deleted:
             raise HTTPException(
                 exc.status_code,
                 f"Ошибка на шаге «{progress}» — недособранная кампания #{cid} "
-                f"перенесена в архив Keitaro (восстановление: "
-                f"POST /campaigns/{cid}/restore). Исходная ошибка: {exc.detail}",
+                f"удалена из Keitaro (DELETE /campaigns/{cid}). "
+                f"Исходная ошибка: {exc.detail}",
             ) from exc
         raise HTTPException(
             exc.status_code,

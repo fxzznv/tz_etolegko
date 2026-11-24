@@ -29,8 +29,8 @@ def test_single_offer_gets_100():
 def test_three_offers_split_evenly_with_remainder():
     rows = [row(1), row(2), row(3)]
     redistribute(rows)
-    # 100 / 3 = 33 + остаток 1 → первые по id получают +1
-    assert sorted(shares(rows).values()) == [33, 33, 34]
+    # 100 / 3 = 33 + остаток 1 → первый в списке получает +1
+    assert shares(rows) == {1: 34, 2: 33, 3: 33}
     assert sum(shares(rows).values()) == 100
 
 
