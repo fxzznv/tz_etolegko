@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adrobot — кампании Keitaro</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="shell">
+  <header>
+    <strong>Adrobot</strong>
+    <span id="demo-badge" class="badge hidden">демо-режим</span>
+  </header>
+  <nav>
+    <button data-page="editor" class="active">Кампании</button>
+    <button data-page="create">Создать кампанию</button>
+  </nav>
+  <main>
+    <p id="error" class="error hidden"></p>
+    <p id="notice" class="notice hidden"></p>
+
+    <!-- ===== Создание кампании ===== -->
+    <section id="page-create" class="hidden">
+      <h1>Новая кампания</h1>
+      <form id="create-form" class="card form-grid">
+        <label>Название
+          <input name="name" required maxlength="200" placeholder="My Campaign">
+        </label>
+        <label>Гео (код страны)
+          <input name="country" required pattern="[A-Z]{2}" maxlength="2"
+                 list="countries" placeholder="DE" style="text-transform:uppercase">
+          <datalist id="countries"></datalist>
+        </label>
+        <label class="wide">Оффер
+          <input id="offer-input" required autocomplete="off" placeholder="ID или название оффера">
+        </label>
+        <label>Домен
+          <select name="domain_id" id="sel-domain" required><option value="">Загрузка…</option></select>
+        </label>
+        <label>Группа
+          <select name="group_id" id="sel-group" required><option value="">Загрузка…</option></select>
+        </label>
+        <label>Источник
+          <select name="traffic_source_id" id="sel-source" required><option value="">Загрузка…</option></select>
+        </label>
+        <div class="wide actions"><button type="submit" id="create-btn">Создать</button></div>
+      </form>
+      <p class="hint">Будут созданы два потока: первый отправляет трафик из выбранной страны на Google,
+      второй — на указанный оффер. Домен, группа и источник берутся из Keitaro.</p>
+    </section>
+
+    <!-- ===== Редактор ===== -->
+    <section id="page-editor">
+      <h1>Кампании</h1>
+      <div class="card toolbar">
+        <form id="fetch-form">
+          <label>ID кампании
+            <input name="cid" type="number" min="1" required placeholder="123">
+          </label>
+          <button type="submit">Загрузить потоки</button>
+        </form>
+        <label>Локальные кампании
+          <select id="local-campaigns"><option value="">—</option></select>
+        </label>
+      </div>
+      <div id="campaign-view"></div>
+      <p id="editor-hint" class="hint">Введите ID кампании из Keitaro и нажмите «Загрузить потоки».</p>
+    </section>
+  </main>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
