@@ -220,8 +220,8 @@ def create_campaign(data: CampaignCreate, db: OrmSession = Depends(get_db)):
             raise HTTPException(
                 exc.status_code,
                 f"Ошибка на шаге «{progress}» — недособранная кампания #{cid} "
-                f"удалена из Keitaro (DELETE /campaigns/{cid}). "
-                f"Исходная ошибка: {exc.detail}",
+                f"удалена из Keitaro (DELETE /campaigns/{cid}; по документации "
+                f"Keitaro — перенос в архив). Исходная ошибка: {exc.detail}",
             ) from exc
         raise HTTPException(
             exc.status_code,

@@ -18,8 +18,8 @@
 ## Требования
 
 - Python 3.9+
-- ключ Keitaro Admin API v1 (в админке: Maintenance → Users → Key for
-  Admin API, либо Account → API keys)
+- ключ Keitaro Admin API v1 (в админке, раздел может называться иначе:
+  Maintenance → Users → Key for Admin API, либо Account → API keys)
 - для демо-режима без трекера — ничего, ключ не нужен
 
 ## Запуск
